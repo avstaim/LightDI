@@ -66,6 +66,9 @@ public class ManagerImpl implements ImplementationManager {
             if (interfaceClass.isAnnotationPresent(DefaultImplementation.class)) {
                 DefaultImplementation annotation = interfaceClass.getAnnotation(DefaultImplementation.class);
                 implementationClass = annotation.value();
+                if (implementationClass.equals(Object.class)) {
+                    implementationClass = Class.forName(annotation.name());
+                }
             } else throw new ClassNotFoundException();
         }
         return implementationClass;

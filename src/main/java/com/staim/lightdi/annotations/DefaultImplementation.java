@@ -14,5 +14,6 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DefaultImplementation {
-    Class<?> value();
+    Class<?> value() default Object.class;
+    String name() default "";
 }
