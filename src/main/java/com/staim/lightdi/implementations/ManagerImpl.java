@@ -121,4 +121,17 @@ public class ManagerImpl implements ImplementationManager {
     public void inject(Class<?> interfaceClass, Class<?> implementationClass) {
         implementationMap.put(interfaceClass, implementationClass);
     }
+
+    @Override
+    public void inject(Map<Class<?>, Class<?>> implementationMap) {
+        this.implementationMap.putAll(implementationMap);
+    }
+
+    @Override
+    public void inject(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException {
+        for (Class<?> interfaceClass : implementationMap.keySet()) {
+            Class<?> implementationClass = Class.forName(packageMap.get(interfaceClass) + "." + implementationMap.get(interfaceClass));
+            this.implementationMap.put(interfaceClass, implementationClass);
+        }
+    }
 }
