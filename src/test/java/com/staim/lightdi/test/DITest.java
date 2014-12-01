@@ -55,5 +55,13 @@ public class DITest {
         Assert.assertNotNull(t4.t3().t2());
         Assert.assertEquals("TestClass1_1", t4.t3().t1().test1());
         Assert.assertEquals("TestClass2_1 - TEST-D - 3", t4.t3().t2().test2("TEST-D", 3));
+
+        TestInterface5 t5 =  LightDI.instance().createInstance(TestInterface5.class);
+        Assert.assertNotNull(t5);
+        Assert.assertNotNull(t5.t1());
+        Assert.assertNotNull(t5.t2());
+        Assert.assertEquals("TestClass1_1", t5.t1().test1());
+        Assert.assertEquals("TestClass2_1 - TEST-E - 4", t5.t2().test2("TEST-E", 4));
+        Assert.assertEquals(5, t5.test5());
     }
 }
