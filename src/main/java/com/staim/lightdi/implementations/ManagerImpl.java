@@ -28,7 +28,6 @@ public class ManagerImpl implements ImplementationManager {
             insideInjections(object, implementationClass);
             return cast(object);
         } catch (NoSuchMethodException|InvocationTargetException |InstantiationException|IllegalAccessException e) {
-            //Log.e(TAG, "Error Instantiating " + implementationName + ": ", e);
             return null;
         }
     }
@@ -54,7 +53,6 @@ public class ManagerImpl implements ImplementationManager {
             insideInjections(object, implementationClass);
             return cast(object);
         } catch (InvocationTargetException|InstantiationException|IllegalAccessException e) {
-            //Log.e(TAG, "Error Instantiating " + implementationName + ": ", e);
             return null;
         }
     }
@@ -137,9 +135,25 @@ public class ManagerImpl implements ImplementationManager {
     }
 
     @Override
-    public void inject(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException {
+    public void injectNames(Map<Class<?>, String> implementationMap) throws ClassNotFoundException {
+        for (Class<?> interfaceClass : implementationMap.keySet()) {
+            Class<?> implementationClass = Class.forName(implementationMap.get(interfaceClass));
+            this.implementationMap.put(interfaceClass, implementationClass);
+        }
+    }
+
+    @Override
+    public void injectNames(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException {
         for (Class<?> interfaceClass : implementationMap.keySet()) {
             Class<?> implementationClass = Class.forName(packageMap.get(interfaceClass) + "." + implementationMap.get(interfaceClass));
+            this.implementationMap.put(interfaceClass, implementationClass);
+        }
+    }
+
+    @Override
+    public void injectNames(String packageName, Map<Class<?>, String> implementationMap) throws ClassNotFoundException {
+        for (Class<?> interfaceClass : implementationMap.keySet()) {
+            Class<?> implementationClass = Class.forName(packageName + "." + implementationMap.get(interfaceClass));
             this.implementationMap.put(interfaceClass, implementationClass);
         }
     }

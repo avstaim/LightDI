@@ -13,7 +13,7 @@ import org.junit.Test;
 public class DITest {
     @Test
     public void testDI() {
-        Assert.assertEquals("LightDI v.0.0.3", LightDI.versionString());
+        Assert.assertEquals("LightDI v.null", LightDI.versionString());
 
         TestInterface1 t1 = LightDI.instance().createInstance(TestInterface1.class);
         Assert.assertNotNull(t1);

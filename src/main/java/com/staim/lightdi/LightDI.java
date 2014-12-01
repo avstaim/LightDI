@@ -12,7 +12,7 @@ public final class LightDI {
     private static ImplementationManager _instance;
     private static Class<?> _implementationClass = ManagerImpl.class;
 
-    private static final String version = "LightDI v.0.0.3";
+    private static final String versionHeader = "LightDI v.";
 
     private LightDI() {}
 
@@ -26,5 +26,5 @@ public final class LightDI {
         }
     }
 
-    public static String versionString() { return version; }
+    public static String versionString() { return versionHeader + LightDI.class.getPackage().getSpecificationVersion(); }
 }
