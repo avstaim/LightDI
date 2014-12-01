@@ -4,7 +4,7 @@ Does not require Java EE, works with Android.
 
 **Using LightDI**
 
-1. Provide default implementation of interface:
+- Provide default implementation of interface:
 
 ``` java
 @DefaultImplementation(TestClass1_1.class)
@@ -24,13 +24,13 @@ public interface TestInterface1 {
 
 or ...
 
-2. Inject implementation in runtime:
+- Inject implementation in runtime:
 
 ``` java
 LightDI.instance().inject(TestInterface1.class, TestClass1_3.class);
 ```
 
-3. Create instance of your class:
+- Create instance of your class:
 
 ``` java
 TestInterface1 t1 = LightDI.instance().createInstance(TestInterface1.class);
@@ -39,7 +39,7 @@ TestInterface1 t1 = LightDI.instance().createInstance(TestInterface1.class);
 That is quite simple, isn't it? =) 
 Let's review some advanced features.
 
-4. (Optional) Make your class use inside injections:
+- (Optional) Make your class use inside injections:
 
 ``` java
 package com.staim.lightdi.test;
@@ -65,7 +65,7 @@ public class TestClass3 implements TestInterface3 {
 
 *NOTE:* Do not forget to annotate class @Inject as well to inside injections to work.
 
-5. Use your injected type hierarchy:
+- Use your injected type hierarchy:
 
 ``` java
 TestInterface3 t3 = LightDI.instance().createInstance(TestInterface3.class);
