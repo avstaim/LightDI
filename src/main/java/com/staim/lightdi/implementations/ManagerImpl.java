@@ -98,7 +98,7 @@ public class ManagerImpl implements ImplementationManager {
     }
 
     @Override
-    public <T> T createInstance(Class<?> interfaceClass) {
+    public <T> T createInstance(Class<T> interfaceClass) {
         try {
             Class<?> implementationClass = getImplementationClass(interfaceClass);
             return createInstanceInternal(implementationClass);
@@ -108,7 +108,7 @@ public class ManagerImpl implements ImplementationManager {
     }
 
     @Override
-    public <T> T createInstance(Class<?> interfaceClass, Object... arguments) {
+    public <T> T createInstance(Class<T> interfaceClass, Object... arguments) {
         try {
             Class<?> implementationClass = getImplementationClass(interfaceClass);
             return createInstanceInternal(implementationClass, arguments);
@@ -118,43 +118,66 @@ public class ManagerImpl implements ImplementationManager {
     }
 
     @Override
-    public void inject(Class<?> interfaceClass, String packageName, String implementationName) throws ClassNotFoundException {
-        Class<?> implementationClass = Class.forName(packageName + "." + implementationName);
-        if (implementationClass == null) throw new ClassNotFoundException();
-        inject(interfaceClass, implementationClass);
+    public void inject(Class<?> interfaceClass, String packageName, String implementationName) throws ClassNotFoundException, ClassCastException {
+        inject(interfaceClass, packageName + "." + implementationName);
     }
 
     @Override
-    public void inject(Class<?> interfaceClass, Class<?> implementationClass) {
+    public void inject(Class<?> interfaceClass, String fullName) throws ClassNotFoundException, ClassCastException {
+        Class<?> implementationClass = Class.forName(fullName);
+        if (implementationClass == null) throw new ClassNotFoundException();
+        if (interfaceClass.isAssignableFrom(implementationClass))
+            implementationMap.put(interfaceClass, implementationClass);
+        else
+            throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
+    }
+
+    @Override
+    public <T, N extends T> void inject(Class<T> interfaceClass, Class<N> implementationClass) {
         implementationMap.put(interfaceClass, implementationClass);
     }
 
     @Override
     public void inject(Map<Class<?>, Class<?>> implementationMap) {
-        this.implementationMap.putAll(implementationMap);
+        for (Class<?> interfaceClass : implementationMap.keySet()) {
+            Class<?> implementationClass = implementationMap.get(interfaceClass);
+            if (interfaceClass.isAssignableFrom(implementationClass))
+                this.implementationMap.put(interfaceClass, implementationClass);
+            else
+                throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
+        }
     }
 
     @Override
-    public void injectNames(Map<Class<?>, String> implementationMap) throws ClassNotFoundException {
+    public void injectNames(Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException {
         for (Class<?> interfaceClass : implementationMap.keySet()) {
             Class<?> implementationClass = Class.forName(implementationMap.get(interfaceClass));
-            this.implementationMap.put(interfaceClass, implementationClass);
+            if (interfaceClass.isAssignableFrom(implementationClass))
+                this.implementationMap.put(interfaceClass, implementationClass);
+            else
+                throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
         }
     }
 
     @Override
-    public void injectNames(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException {
+    public void injectNames(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException {
         for (Class<?> interfaceClass : implementationMap.keySet()) {
             Class<?> implementationClass = Class.forName(packageMap.get(interfaceClass) + "." + implementationMap.get(interfaceClass));
-            this.implementationMap.put(interfaceClass, implementationClass);
+            if (interfaceClass.isAssignableFrom(implementationClass))
+                this.implementationMap.put(interfaceClass, implementationClass);
+            else
+                throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
         }
     }
 
     @Override
-    public void injectNames(String packageName, Map<Class<?>, String> implementationMap) throws ClassNotFoundException {
+    public void injectNames(String packageName, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException {
         for (Class<?> interfaceClass : implementationMap.keySet()) {
             Class<?> implementationClass = Class.forName(packageName + "." + implementationMap.get(interfaceClass));
-            this.implementationMap.put(interfaceClass, implementationClass);
+            if (interfaceClass.isAssignableFrom(implementationClass))
+                this.implementationMap.put(interfaceClass, implementationClass);
+            else
+                throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
         }
     }
 }

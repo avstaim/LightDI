@@ -6,7 +6,7 @@
 
     <groupId>com.staim</groupId>
     <artifactId>LightDI</artifactId>
-    <version>0.0.4</version>
+    <version>0.1</version>
     <packaging>jar</packaging>
 
     <description>Simple lightweight Java library for working with Dependency Injection</description>

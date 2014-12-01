@@ -8,14 +8,15 @@ import java.util.Map;
  */
 @SuppressWarnings("UnusedDeclaration")
 public interface ImplementationManager {
-    <T> T createInstance(Class<?> interfaceClass);
-    <T> T createInstance(Class<?> interfaceClass, Object... arguments);
+    <T> T createInstance(Class<T> interfaceClass);
+    <T> T createInstance(Class<T> interfaceClass, Object... arguments);
 
-    void inject(Class<?> interfaceClass, String packageName, String implementationName) throws ClassNotFoundException;
-    void inject(Class<?> interfaceClass, Class<?> implementationClass);
+    void inject(Class<?> interfaceClass, String fullName) throws ClassNotFoundException, ClassCastException;
+    void inject(Class<?> interfaceClass, String packageName, String implementationName) throws ClassNotFoundException, ClassCastException;
+    <T, N extends T> void inject(Class<T> interfaceClass, Class<N> implementationClass);
 
     void inject(Map<Class<?>, Class<?>> implementationMap);
-    void injectNames(Map<Class<?>, String> implementationMap) throws ClassNotFoundException;
-    void injectNames(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException;
-    void injectNames(String packageName, Map<Class<?>, String> implementationMap) throws ClassNotFoundException;
+    void injectNames(Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException;
+    void injectNames(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException;
+    void injectNames(String packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException;
 }
