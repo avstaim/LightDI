@@ -8,7 +8,7 @@ import java.util.Map;
  */
 @SuppressWarnings("UnusedDeclaration")
 public interface ImplementationManager {
-    <T> T createInstance(Class<T> interfaceClass);
+    <T> T getInstance(Class<T> interfaceClass);
     <T> T createInstance(Class<T> interfaceClass, Object... arguments);
 
     void inject(Class<?> interfaceClass, String fullName) throws ClassNotFoundException, ClassCastException;
@@ -19,4 +19,6 @@ public interface ImplementationManager {
     void injectNames(Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException;
     void injectNames(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException;
     void injectNames(String packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException;
+
+    void cleanSingletons();
 }

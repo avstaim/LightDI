@@ -2,6 +2,7 @@ package com.staim.lightdi.implementations;
 
 import com.staim.lightdi.annotations.DefaultImplementation;
 import com.staim.lightdi.annotations.Inject;
+import com.staim.lightdi.annotations.Singleton;
 import com.staim.lightdi.interfaces.ImplementationManager;
 
 import java.lang.reflect.Constructor;
@@ -19,6 +20,7 @@ import static com.staim.lightdi.util.GenericUtil.cast;
 
 public class ManagerImpl implements ImplementationManager {
     private Map<Class<?>, Class<?>> implementationMap = new HashMap<>();
+    private Map<Class<?>, Object> singletons = new HashMap<>();
 
     public <T> T createInstanceInternal(Class<?> implementationClass) {
         try {
@@ -86,7 +88,7 @@ public class ManagerImpl implements ImplementationManager {
             for (Field field : getInheritedPrivateFields(implementationClass)) {
                 if (field.isAnnotationPresent(Inject.class)) {
                     Class<?> fieldClass = field.getType();
-                    Object fieldImplementation = createInstance(fieldClass);
+                    Object fieldImplementation = getInstance(fieldClass);
                     insideInjections(fieldImplementation, fieldClass);
                     field.setAccessible(true);
                     try {
@@ -98,10 +100,19 @@ public class ManagerImpl implements ImplementationManager {
     }
 
     @Override
-    public <T> T createInstance(Class<T> interfaceClass) {
+    public <T> T getInstance(Class<T> interfaceClass) {
+        boolean isSingleton = false;
+        if (interfaceClass.isAnnotationPresent(Singleton.class)) {
+            isSingleton = true;
+            Object singleton = singletons.get(interfaceClass);
+            if (singleton != null)
+                return cast(singleton);
+        }
         try {
             Class<?> implementationClass = getImplementationClass(interfaceClass);
-            return createInstanceInternal(implementationClass);
+            T result = createInstanceInternal(implementationClass);
+            if (isSingleton) singletons.put(interfaceClass, result);
+            return result;
         } catch (ClassNotFoundException e) {
             return null;
         }
@@ -117,6 +128,12 @@ public class ManagerImpl implements ImplementationManager {
         }
     }
 
+    private void checkSingletonForInject(Class<?> interfaceClass) {
+        if (interfaceClass.isAnnotationPresent(Singleton.class)) {
+            singletons.remove(interfaceClass);
+        }
+    }
+
     @Override
     public void inject(Class<?> interfaceClass, String packageName, String implementationName) throws ClassNotFoundException, ClassCastException {
         inject(interfaceClass, packageName + "." + implementationName);
@@ -126,6 +143,7 @@ public class ManagerImpl implements ImplementationManager {
     public void inject(Class<?> interfaceClass, String fullName) throws ClassNotFoundException, ClassCastException {
         Class<?> implementationClass = Class.forName(fullName);
         if (implementationClass == null) throw new ClassNotFoundException();
+        checkSingletonForInject(interfaceClass);
         if (interfaceClass.isAssignableFrom(implementationClass))
             implementationMap.put(interfaceClass, implementationClass);
         else
@@ -134,6 +152,7 @@ public class ManagerImpl implements ImplementationManager {
 
     @Override
     public <T, N extends T> void inject(Class<T> interfaceClass, Class<N> implementationClass) {
+        checkSingletonForInject(interfaceClass);
         implementationMap.put(interfaceClass, implementationClass);
     }
 
@@ -141,6 +160,7 @@ public class ManagerImpl implements ImplementationManager {
     public void inject(Map<Class<?>, Class<?>> implementationMap) {
         for (Class<?> interfaceClass : implementationMap.keySet()) {
             Class<?> implementationClass = implementationMap.get(interfaceClass);
+            checkSingletonForInject(interfaceClass);
             if (interfaceClass.isAssignableFrom(implementationClass))
                 this.implementationMap.put(interfaceClass, implementationClass);
             else
@@ -152,6 +172,7 @@ public class ManagerImpl implements ImplementationManager {
     public void injectNames(Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException {
         for (Class<?> interfaceClass : implementationMap.keySet()) {
             Class<?> implementationClass = Class.forName(implementationMap.get(interfaceClass));
+            checkSingletonForInject(interfaceClass);
             if (interfaceClass.isAssignableFrom(implementationClass))
                 this.implementationMap.put(interfaceClass, implementationClass);
             else
@@ -163,6 +184,7 @@ public class ManagerImpl implements ImplementationManager {
     public void injectNames(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException {
         for (Class<?> interfaceClass : implementationMap.keySet()) {
             Class<?> implementationClass = Class.forName(packageMap.get(interfaceClass) + "." + implementationMap.get(interfaceClass));
+            checkSingletonForInject(interfaceClass);
             if (interfaceClass.isAssignableFrom(implementationClass))
                 this.implementationMap.put(interfaceClass, implementationClass);
             else
@@ -174,10 +196,16 @@ public class ManagerImpl implements ImplementationManager {
     public void injectNames(String packageName, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException {
         for (Class<?> interfaceClass : implementationMap.keySet()) {
             Class<?> implementationClass = Class.forName(packageName + "." + implementationMap.get(interfaceClass));
+            checkSingletonForInject(interfaceClass);
             if (interfaceClass.isAssignableFrom(implementationClass))
                 this.implementationMap.put(interfaceClass, implementationClass);
             else
                 throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
         }
+    }
+
+    @Override
+    public void cleanSingletons() {
+        singletons.clear();
     }
 }
