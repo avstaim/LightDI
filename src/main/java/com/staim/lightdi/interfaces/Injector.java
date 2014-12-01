@@ -7,7 +7,7 @@ import java.util.Map;
  * Created by alexeyshcherbinin on 28.11.14.
  */
 @SuppressWarnings("UnusedDeclaration")
-public interface ImplementationManager {
+public interface Injector {
     <T> T getInstance(Class<T> interfaceClass);
 
     <T> T createInstance(Class<T> interfaceClass);

@@ -1,7 +1,7 @@
 package com.staim.lightdi;
 
-import com.staim.lightdi.implementations.ManagerImpl;
-import com.staim.lightdi.interfaces.ImplementationManager;
+import com.staim.lightdi.implementations.InjectorImpl;
+import com.staim.lightdi.interfaces.Injector;
 
 /**
  * LightDI main factory class
@@ -9,18 +9,18 @@ import com.staim.lightdi.interfaces.ImplementationManager;
  * Created by alexeyshcherbinin on 28.11.14.
  */
 public final class LightDI {
-    private static ImplementationManager _instance;
-    private static Class<?> _implementationClass = ManagerImpl.class;
+    private static Injector _injector;
+    private static Class<?> _injectorClass = InjectorImpl.class;
 
     private static final String versionHeader = "LightDI v.";
 
     private LightDI() {}
 
-    public static ImplementationManager instance() {
-        if (_instance != null) return _instance;
+    public static Injector injector() {
+        if (_injector != null) return _injector;
         try {
-            _instance = (ImplementationManager)_implementationClass.newInstance();
-            return _instance;
+            _injector = (Injector) _injectorClass.newInstance();
+            return _injector;
         } catch (InstantiationException|IllegalAccessException e) {
             throw new RuntimeException("Unable to create Implementation Manager Instance");
         }

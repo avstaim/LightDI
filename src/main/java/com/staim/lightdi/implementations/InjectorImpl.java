@@ -3,7 +3,7 @@ package com.staim.lightdi.implementations;
 import com.staim.lightdi.annotations.DefaultImplementation;
 import com.staim.lightdi.annotations.Inject;
 import com.staim.lightdi.annotations.Singleton;
-import com.staim.lightdi.interfaces.ImplementationManager;
+import com.staim.lightdi.interfaces.Injector;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -18,7 +18,7 @@ import static com.staim.lightdi.util.GenericUtil.cast;
  * Created by alexeyshcherbinin on 28.11.14.
  */
 
-public class ManagerImpl implements ImplementationManager {
+public class InjectorImpl implements Injector {
     private Map<Class<?>, Class<?>> implementationMap = new HashMap<>();
     private Map<Class<?>, Object> singletons = new HashMap<>();
 
@@ -101,23 +101,22 @@ public class ManagerImpl implements ImplementationManager {
 
     @Override
     public <T> T getInstance(Class<T> interfaceClass) {
-        boolean isSingleton = false;
         if (interfaceClass.isAnnotationPresent(Singleton.class)) {
-            isSingleton = true;
             Object singleton = singletons.get(interfaceClass);
             if (singleton != null)
                 return cast(singleton);
         }
-        T result = createInstance(interfaceClass);
-        if (isSingleton) singletons.put(interfaceClass, result);
-        return result;
+        return createInstance(interfaceClass);
     }
 
     @Override
     public <T> T createInstance(Class<T> interfaceClass) {
         try {
             Class<?> implementationClass = getImplementationClass(interfaceClass);
-            return createInstanceInternal(implementationClass);
+            T result = createInstanceInternal(implementationClass);
+            if (interfaceClass.isAnnotationPresent(Singleton.class))
+                singletons.put(interfaceClass, result);
+            return result;
         } catch (ClassNotFoundException e) {
             return null;
         }
@@ -127,7 +126,10 @@ public class ManagerImpl implements ImplementationManager {
     public <T> T createInstance(Class<T> interfaceClass, Object... arguments) {
         try {
             Class<?> implementationClass = getImplementationClass(interfaceClass);
-            return createInstanceInternal(implementationClass, arguments);
+            T result = createInstanceInternal(implementationClass, arguments);
+            if (interfaceClass.isAnnotationPresent(Singleton.class))
+                singletons.put(interfaceClass, result);
+            return result;
         } catch (ClassNotFoundException e) {
             return null;
         }
