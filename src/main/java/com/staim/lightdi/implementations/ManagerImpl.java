@@ -108,11 +108,16 @@ public class ManagerImpl implements ImplementationManager {
             if (singleton != null)
                 return cast(singleton);
         }
+        T result = createInstance(interfaceClass);
+        if (isSingleton) singletons.put(interfaceClass, result);
+        return result;
+    }
+
+    @Override
+    public <T> T createInstance(Class<T> interfaceClass) {
         try {
             Class<?> implementationClass = getImplementationClass(interfaceClass);
-            T result = createInstanceInternal(implementationClass);
-            if (isSingleton) singletons.put(interfaceClass, result);
-            return result;
+            return createInstanceInternal(implementationClass);
         } catch (ClassNotFoundException e) {
             return null;
         }
