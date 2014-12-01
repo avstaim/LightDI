@@ -1,6 +1,7 @@
 package com.staim.lightdi.test;
 
 import com.staim.lightdi.LightDI;
+import junit.framework.Assert;
 import org.junit.Test;
 
 
@@ -12,29 +13,47 @@ import org.junit.Test;
 public class DITest {
     @Test
     public void testDI() {
+        Assert.assertEquals("LightDI v.0.0.3", LightDI.versionString());
+
         TestInterface1 t1 = LightDI.instance().createInstance(TestInterface1.class);
-        t1.test1();
+        Assert.assertNotNull(t1);
+        Assert.assertEquals("TestClass1_1", t1.test1());
+
         LightDI.instance().inject(TestInterface1.class, TestClass1_2.class);
         t1 = LightDI.instance().createInstance(TestInterface1.class);
-        t1.test1();
+        Assert.assertNotNull(t1);
+        Assert.assertEquals("TestClass1_2", t1.test1());
+
         LightDI.instance().inject(TestInterface1.class, TestClass1_3.class);
         t1 = LightDI.instance().createInstance(TestInterface1.class);
-        t1.test1();
+        Assert.assertNotNull(t1);
+        Assert.assertEquals("TestClass1_3", t1.test1());
 
         TestInterface2 t2 = LightDI.instance().createInstance(TestInterface2.class);
-        t2.test2("TEST-A", 0);
+        Assert.assertNotNull(t2);
+        Assert.assertEquals("TestClass2_1 - TEST-A - 0", t2.test2("TEST-A", 0));
+
         LightDI.instance().inject(TestInterface2.class, TestClass2_2.class);
         t2 = LightDI.instance().createInstance(TestInterface2.class);
-        t2.test2("TEST-B", 1);
+        Assert.assertNotNull(t2);
+        Assert.assertEquals("TestClass2_2 - TEST-B - 1", t2.test2("TEST-B", 1));
         
         TestInterface3 t3 = LightDI.instance().createInstance(TestInterface3.class);
-        t3.t1().test1();
-        t3.t2().test2("TEST-C", 2);
-        
+        Assert.assertNotNull(t3);
+        Assert.assertNotNull(t3.t1());
+        Assert.assertNotNull(t3.t2());
+        Assert.assertEquals("TestClass1_3", t3.t1().test1());
+        Assert.assertEquals("TestClass2_2 - TEST-C - 2", t3.t2().test2("TEST-C", 2));
+
         LightDI.instance().inject(TestInterface1.class, TestClass1_1.class);
+        LightDI.instance().inject(TestInterface2.class, TestClass2_1.class);
         
         TestInterface4 t4 = LightDI.instance().createInstance(TestInterface4.class);
-        t4.t3().t1().test1();
-        t4.t3().t2().test2("TEST-D", 3);
+        Assert.assertNotNull(t4);
+        Assert.assertNotNull(t4.t3());
+        Assert.assertNotNull(t4.t3().t1());
+        Assert.assertNotNull(t4.t3().t2());
+        Assert.assertEquals("TestClass1_1", t4.t3().t1().test1());
+        Assert.assertEquals("TestClass2_1 - TEST-D - 3", t4.t3().t2().test2("TEST-D", 3));
     }
 }

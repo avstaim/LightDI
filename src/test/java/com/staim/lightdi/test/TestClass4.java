@@ -1,9 +1,8 @@
 package com.staim.lightdi.test;
 
 import com.staim.lightdi.annotations.Inject;
-import com.staim.lightdi.annotations.UsesInternalInjection;
 
-@UsesInternalInjection
+@Inject
 public class TestClass4 implements TestInterface4 {
     @Inject
     private TestInterface3 t3;

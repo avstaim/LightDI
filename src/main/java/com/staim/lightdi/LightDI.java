@@ -2,7 +2,6 @@ package com.staim.lightdi;
 
 import com.staim.lightdi.implementations.ManagerImpl;
 import com.staim.lightdi.interfaces.ImplementationManager;
-import com.staim.lightdi.util.GenericUtil;
 
 /**
  * LightDI main factory class
@@ -12,6 +11,8 @@ import com.staim.lightdi.util.GenericUtil;
 public final class LightDI {
     private static ImplementationManager _instance;
     private static Class<?> _implementationClass = ManagerImpl.class;
+
+    private static final String version = "LightDI v.0.0.3";
 
     private LightDI() {}
 
@@ -24,4 +25,6 @@ public final class LightDI {
             throw new RuntimeException("Unable to create Implementation Manager Instance");
         }
     }
+
+    public static String versionString() { return version; }
 }

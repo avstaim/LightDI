@@ -11,6 +11,6 @@ import java.lang.annotation.Target;
  * Created by a_shcherbinin on 28.11.14.
  */
 
-@Target({ElementType.FIELD})
+@Target({ElementType.FIELD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Inject {}

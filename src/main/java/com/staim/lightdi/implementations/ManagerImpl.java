@@ -2,14 +2,13 @@ package com.staim.lightdi.implementations;
 
 import com.staim.lightdi.annotations.DefaultImplementation;
 import com.staim.lightdi.annotations.Inject;
-import com.staim.lightdi.annotations.UsesInternalInjection;
 import com.staim.lightdi.interfaces.ImplementationManager;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
 import static com.staim.lightdi.util.GenericUtil.cast;
 
 /**
@@ -74,9 +73,19 @@ public class ManagerImpl implements ImplementationManager {
         return implementationClass;
     }
 
+    private static List<Field> getInheritedPrivateFields(Class<?> type) {
+        List<Field> result = new ArrayList<>();
+        Class<?> cls = type;
+        while (cls != null && cls != Object.class) {
+            Collections.addAll(result, cls.getDeclaredFields());
+            cls = cls.getSuperclass();
+        }
+        return result;
+    }
+
     private void insideInjections(Object implementation, Class<?> implementationClass) {
-        if (implementationClass.isAnnotationPresent(UsesInternalInjection.class)) {
-            for (Field field : implementationClass.getDeclaredFields()) {
+        if (implementationClass.isAnnotationPresent(Inject.class)) {
+            for (Field field : getInheritedPrivateFields(implementationClass)) {
                 if (field.isAnnotationPresent(Inject.class)) {
                     Class<?> fieldClass = field.getType();
                     Object fieldImplementation = createInstance(fieldClass);
