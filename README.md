@@ -65,7 +65,7 @@ public class TestClass3 implements TestInterface3 {
 
 *NOTE:* Do not forget to annotate class @Inject as well to inside injections to work.
 
-4. Use your injected type hierarchy:
+5. Use your injected type hierarchy:
 
 ``` java
 TestInterface3 t3 = LightDI.instance().createInstance(TestInterface3.class);
