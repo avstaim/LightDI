@@ -11,6 +11,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static com.staim.lightdi.util.GenericUtil.cast;
 
@@ -21,8 +24,9 @@ import static com.staim.lightdi.util.GenericUtil.cast;
  */
 
 public class InjectorImpl implements Injector {
-    private Map<Class<?>, Class<?>> _implementationMap = new HashMap<>();
-    private Map<Class<?>, Object> singletons = new HashMap<>();
+    private Map<Class<?>, Class<?>> _implementationMap = new ConcurrentHashMap<>();
+    private Map<Class<?>, Object> _singletons = new ConcurrentHashMap<>();
+    private ReadWriteLock _lock = new ReentrantReadWriteLock();
 
     public <T> T createInstanceInternal(Class<?> implementationClass) {
         try {
@@ -105,66 +109,82 @@ public class InjectorImpl implements Injector {
 
     @Override
     public <T> T getInstance(Class<T> interfaceClass) {
-        if (interfaceClass.isAnnotationPresent(Singleton.class)) {
-            Object singleton = singletons.get(interfaceClass);
-            if (singleton != null)
-                return cast(singleton);
+        _lock.readLock().lock();
+        try {
+            if (interfaceClass.isAnnotationPresent(Singleton.class)) {
+                Object singleton = _singletons.get(interfaceClass);
+                if (singleton != null)
+                    return cast(singleton);
+            }
+            return createInstance(interfaceClass);
+        } finally {
+            _lock.readLock().unlock();
         }
-        return createInstance(interfaceClass);
     }
 
     @Override
     public <T> T createInstance(Class<T> interfaceClass) {
+        _lock.readLock().lock();
         try {
             Class<?> implementationClass = getImplementationClass(interfaceClass);
             T result = createInstanceInternal(implementationClass);
             if (interfaceClass.isAnnotationPresent(Singleton.class))
-                singletons.put(interfaceClass, result);
+                _singletons.put(interfaceClass, result);
             if (result instanceof Injectable)
                 ((Injectable)result).onCreate();
             return result;
         } catch (ClassNotFoundException e) {
             return null;
+        } finally {
+            _lock.readLock().unlock();
         }
     }
 
     @Override
     public <T> T createInstance(Class<T> interfaceClass, Object... arguments) {
+        _lock.readLock().lock();
         try {
             Class<?> implementationClass = getImplementationClass(interfaceClass);
             T result = createInstanceInternal(implementationClass, arguments);
             if (interfaceClass.isAnnotationPresent(Singleton.class))
-                singletons.put(interfaceClass, result);
+                _singletons.put(interfaceClass, result);
             if (result instanceof Injectable)
                 ((Injectable)result).onCreate();
             return result;
         } catch (ClassNotFoundException e) {
             return null;
+        } finally {
+            _lock.readLock().unlock();
         }
     }
 
     private void checkSingletonForInject(Class<?> interfaceClass) {
-        if (interfaceClass.isAnnotationPresent(Singleton.class)) {
-            singletons.remove(interfaceClass);
-        }
+        if (interfaceClass.isAnnotationPresent(Singleton.class))
+            _singletons.remove(interfaceClass);
     }
 
     @Override
     public <T, N extends T> void bind(Class<T> interfaceClass, Class<N> implementationClass) {
+        _lock.writeLock().lock();
         checkSingletonForInject(interfaceClass);
         _implementationMap.put(interfaceClass, implementationClass);
+        _lock.writeLock().unlock();
     }
 
     @Override
     public void bind(Binder binder) {
-        Map<Class<?>, Class<?>> implementationMap = binder.getImplementationMap();
-        for (Class<?> interfaceClass : implementationMap.keySet())
-            checkSingletonForInject(interfaceClass);
-        _implementationMap.putAll(implementationMap);
+        _lock.writeLock().lock();
+            Map<Class<?>, Class<?>> implementationMap = binder.getImplementationMap();
+            for (Class<?> interfaceClass : implementationMap.keySet())
+                checkSingletonForInject(interfaceClass);
+            _implementationMap.putAll(implementationMap);
+        _lock.writeLock().unlock();
     }
 
     @Override
     public void clearSingletons() {
-        singletons.clear();
+        _lock.writeLock().lock();
+        _singletons.clear();
+        _lock.writeLock().unlock();
     }
 }
