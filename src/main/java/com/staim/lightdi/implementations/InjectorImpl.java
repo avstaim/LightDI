@@ -10,7 +10,10 @@ import com.staim.lightdi.interfaces.Injector;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -43,7 +46,7 @@ public class InjectorImpl implements Injector {
     public <T> T createInstanceInternal(Class<?> implementationClass, Object... arguments) {
         try {
             Class<?>[] argumentTypes = new Class<?>[arguments.length];
-            for (int i = 0; i < arguments.length; i++) argumentTypes[i] = arguments[i].getClass();
+            for (int i = 0; i < arguments.length; i++) argumentTypes[i] = arguments[i].getClass(); //fixme: null arguments
             Constructor<?> constructor = null;
 
             try {
@@ -95,13 +98,16 @@ public class InjectorImpl implements Injector {
                 if (field.isAnnotationPresent(Inject.class)) {
                     Class<?> fieldClass = field.getType();
                     Object fieldImplementation = getInstance(fieldClass);
-                    if (fieldImplementation instanceof Injectable)
-                        ((Injectable)fieldImplementation).onInject(implementation);
-                    insideInjections(fieldImplementation, fieldClass);
-                    field.setAccessible(true);
-                    try {
-                        field.set(implementation, fieldImplementation);
-                    } catch (IllegalAccessException ignored) {}
+                    if (fieldImplementation != null) {
+                        if (fieldImplementation instanceof Injectable)
+                            runOnInject((Injectable) fieldImplementation, implementation);
+                        insideInjections(fieldImplementation, fieldClass);
+                        field.setAccessible(true);
+                        try {
+                            field.set(implementation, fieldImplementation);
+                        } catch (IllegalAccessException ignored) {
+                        }
+                    }
                 }
             }
         }
@@ -128,10 +134,12 @@ public class InjectorImpl implements Injector {
         try {
             Class<?> implementationClass = getImplementationClass(interfaceClass);
             T result = createInstanceInternal(implementationClass);
-            if (interfaceClass.isAnnotationPresent(Singleton.class))
-                _singletons.put(interfaceClass, result);
-            if (result instanceof Injectable)
-                ((Injectable)result).onCreate();
+            if (result != null) {
+                if (interfaceClass.isAnnotationPresent(Singleton.class))
+                    _singletons.put(interfaceClass, result);
+                if (result instanceof Injectable)
+                    runOnCreate((Injectable) result);
+            }
             return result;
         } catch (ClassNotFoundException e) {
             return null;
@@ -146,10 +154,12 @@ public class InjectorImpl implements Injector {
         try {
             Class<?> implementationClass = getImplementationClass(interfaceClass);
             T result = createInstanceInternal(implementationClass, arguments);
-            if (interfaceClass.isAnnotationPresent(Singleton.class))
-                _singletons.put(interfaceClass, result);
-            if (result instanceof Injectable)
-                ((Injectable)result).onCreate();
+            if (result != null) {
+                if (interfaceClass.isAnnotationPresent(Singleton.class))
+                    _singletons.put(interfaceClass, result);
+                if (result instanceof Injectable)
+                    runOnCreate((Injectable) result);
+            }
             return result;
         } catch (ClassNotFoundException e) {
             return null;
@@ -182,9 +192,44 @@ public class InjectorImpl implements Injector {
     }
 
     @Override
+    public <T, N extends T> boolean tryBind(Class<T> interfaceClass, Class<N> implementationClass) {
+        if (!_lock.writeLock().tryLock()) return false;
+        checkSingletonForInject(interfaceClass);
+        _implementationMap.put(interfaceClass, implementationClass);
+        _lock.writeLock().unlock();
+        return true;
+    }
+
+    @Override
+    public boolean tryBind(Binder binder) {
+        if (!_lock.writeLock().tryLock()) return false;
+        Map<Class<?>, Class<?>> implementationMap = binder.getImplementationMap();
+        for (Class<?> interfaceClass : implementationMap.keySet())
+            checkSingletonForInject(interfaceClass);
+        _implementationMap.putAll(implementationMap);
+        _lock.writeLock().unlock();
+        return true;
+    }
+
+    @Override
     public void clearSingletons() {
         _lock.writeLock().lock();
         _singletons.clear();
         _lock.writeLock().unlock();
+    }
+
+    private void runOnCreate(final Injectable injectable) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() { injectable.onCreate(); }
+        });
+        thread.start();
+    }
+    private void runOnInject(final Injectable injectable, final Object parent) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() { injectable.onInject(parent); }
+        });
+        thread.start();
     }
 }

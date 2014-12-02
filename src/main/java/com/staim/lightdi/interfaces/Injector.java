@@ -14,5 +14,8 @@ public interface Injector {
     <T, N extends T> void bind(Class<T> interfaceClass, Class<N> implementationClass);
     void bind(Binder binder);
 
+    <T, N extends T> boolean tryBind(Class<T> interfaceClass, Class<N> implementationClass);
+    boolean tryBind(Binder binder);
+
     void clearSingletons();
 }

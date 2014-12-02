@@ -6,6 +6,7 @@ import java.util.Map;
  * Binder allows to bind interfaces with light and elegance
  * Created by alexeyshcherbinin on 02.12.14.
  */
+@SuppressWarnings("UnusedDeclaration")
 public interface Binder {
     Binder setPackage(String packageName);
 
@@ -19,6 +20,7 @@ public interface Binder {
     Binder apply(Map<Class<?>, Class<?>> implementationMap) throws ClassCastException;
 
     Injector finish();
+    Injector tryFinish();
 
     Map<Class<?>, Class<?>> getImplementationMap();
 }

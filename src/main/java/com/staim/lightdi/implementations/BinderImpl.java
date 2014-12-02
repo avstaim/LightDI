@@ -86,5 +86,14 @@ public class BinderImpl implements Binder {
     }
 
     @Override
+    public Injector tryFinish() {
+        Injector injector = LightDI.injector();
+        if (injector.tryBind(this))
+            return injector;
+        else
+            return null;
+    }
+
+    @Override
     public Map<Class<?>, Class<?>> getImplementationMap() { return _implementationMap; }
 }
