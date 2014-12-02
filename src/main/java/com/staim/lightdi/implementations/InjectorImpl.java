@@ -3,6 +3,8 @@ package com.staim.lightdi.implementations;
 import com.staim.lightdi.annotations.DefaultImplementation;
 import com.staim.lightdi.annotations.Inject;
 import com.staim.lightdi.annotations.Singleton;
+import com.staim.lightdi.interfaces.Binder;
+import com.staim.lightdi.interfaces.Injectable;
 import com.staim.lightdi.interfaces.Injector;
 
 import java.lang.reflect.Constructor;
@@ -19,7 +21,7 @@ import static com.staim.lightdi.util.GenericUtil.cast;
  */
 
 public class InjectorImpl implements Injector {
-    private Map<Class<?>, Class<?>> implementationMap = new HashMap<>();
+    private Map<Class<?>, Class<?>> _implementationMap = new HashMap<>();
     private Map<Class<?>, Object> singletons = new HashMap<>();
 
     public <T> T createInstanceInternal(Class<?> implementationClass) {
@@ -60,7 +62,7 @@ public class InjectorImpl implements Injector {
     }
 
     private Class<?> getImplementationClass(Class<?> interfaceClass) throws ClassNotFoundException {
-        Class<?> implementationClass = implementationMap.get(interfaceClass);
+        Class<?> implementationClass = _implementationMap.get(interfaceClass);
         if (implementationClass == null) {
             if (interfaceClass.isAnnotationPresent(DefaultImplementation.class)) {
                 DefaultImplementation annotation = interfaceClass.getAnnotation(DefaultImplementation.class);
@@ -89,6 +91,8 @@ public class InjectorImpl implements Injector {
                 if (field.isAnnotationPresent(Inject.class)) {
                     Class<?> fieldClass = field.getType();
                     Object fieldImplementation = getInstance(fieldClass);
+                    if (fieldImplementation instanceof Injectable)
+                        ((Injectable)fieldImplementation).onInject(implementation);
                     insideInjections(fieldImplementation, fieldClass);
                     field.setAccessible(true);
                     try {
@@ -116,6 +120,8 @@ public class InjectorImpl implements Injector {
             T result = createInstanceInternal(implementationClass);
             if (interfaceClass.isAnnotationPresent(Singleton.class))
                 singletons.put(interfaceClass, result);
+            if (result instanceof Injectable)
+                ((Injectable)result).onCreate();
             return result;
         } catch (ClassNotFoundException e) {
             return null;
@@ -129,6 +135,8 @@ public class InjectorImpl implements Injector {
             T result = createInstanceInternal(implementationClass, arguments);
             if (interfaceClass.isAnnotationPresent(Singleton.class))
                 singletons.put(interfaceClass, result);
+            if (result instanceof Injectable)
+                ((Injectable)result).onCreate();
             return result;
         } catch (ClassNotFoundException e) {
             return null;
@@ -142,77 +150,21 @@ public class InjectorImpl implements Injector {
     }
 
     @Override
-    public void inject(Class<?> interfaceClass, String packageName, String implementationName) throws ClassNotFoundException, ClassCastException {
-        inject(interfaceClass, packageName + "." + implementationName);
-    }
-
-    @Override
-    public void inject(Class<?> interfaceClass, String fullName) throws ClassNotFoundException, ClassCastException {
-        Class<?> implementationClass = Class.forName(fullName);
-        if (implementationClass == null) throw new ClassNotFoundException();
+    public <T, N extends T> void bind(Class<T> interfaceClass, Class<N> implementationClass) {
         checkSingletonForInject(interfaceClass);
-        if (interfaceClass.isAssignableFrom(implementationClass))
-            implementationMap.put(interfaceClass, implementationClass);
-        else
-            throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
+        _implementationMap.put(interfaceClass, implementationClass);
     }
 
     @Override
-    public <T, N extends T> void inject(Class<T> interfaceClass, Class<N> implementationClass) {
-        checkSingletonForInject(interfaceClass);
-        implementationMap.put(interfaceClass, implementationClass);
-    }
-
-    @Override
-    public void inject(Map<Class<?>, Class<?>> implementationMap) {
-        for (Class<?> interfaceClass : implementationMap.keySet()) {
-            Class<?> implementationClass = implementationMap.get(interfaceClass);
+    public void bind(Binder binder) {
+        Map<Class<?>, Class<?>> implementationMap = binder.getImplementationMap();
+        for (Class<?> interfaceClass : implementationMap.keySet())
             checkSingletonForInject(interfaceClass);
-            if (interfaceClass.isAssignableFrom(implementationClass))
-                this.implementationMap.put(interfaceClass, implementationClass);
-            else
-                throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
-        }
+        _implementationMap.putAll(implementationMap);
     }
 
     @Override
-    public void injectNames(Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException {
-        for (Class<?> interfaceClass : implementationMap.keySet()) {
-            Class<?> implementationClass = Class.forName(implementationMap.get(interfaceClass));
-            checkSingletonForInject(interfaceClass);
-            if (interfaceClass.isAssignableFrom(implementationClass))
-                this.implementationMap.put(interfaceClass, implementationClass);
-            else
-                throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
-        }
-    }
-
-    @Override
-    public void injectNames(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException {
-        for (Class<?> interfaceClass : implementationMap.keySet()) {
-            Class<?> implementationClass = Class.forName(packageMap.get(interfaceClass) + "." + implementationMap.get(interfaceClass));
-            checkSingletonForInject(interfaceClass);
-            if (interfaceClass.isAssignableFrom(implementationClass))
-                this.implementationMap.put(interfaceClass, implementationClass);
-            else
-                throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
-        }
-    }
-
-    @Override
-    public void injectNames(String packageName, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException {
-        for (Class<?> interfaceClass : implementationMap.keySet()) {
-            Class<?> implementationClass = Class.forName(packageName + "." + implementationMap.get(interfaceClass));
-            checkSingletonForInject(interfaceClass);
-            if (interfaceClass.isAssignableFrom(implementationClass))
-                this.implementationMap.put(interfaceClass, implementationClass);
-            else
-                throw new ClassCastException("Class '" + implementationClass.getSimpleName() + "' cannot be cast to interface '" + interfaceClass.getSimpleName() + "'");
-        }
-    }
-
-    @Override
-    public void cleanSingletons() {
+    public void clearSingletons() {
         singletons.clear();
     }
 }

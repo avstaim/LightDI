@@ -19,12 +19,12 @@ public class DITest {
         Assert.assertNotNull(t1);
         Assert.assertEquals("TestClass1_1", t1.test1());
 
-        LightDI.injector().inject(TestInterface1.class, TestClass1_2.class);
+        LightDI.injector().bind(TestInterface1.class, TestClass1_2.class);
         t1 = LightDI.injector().getInstance(TestInterface1.class);
         Assert.assertNotNull(t1);
         Assert.assertEquals("TestClass1_2", t1.test1());
 
-        LightDI.injector().inject(TestInterface1.class, TestClass1_3.class);
+        LightDI.injector().bind(TestInterface1.class, TestClass1_3.class);
         t1 = LightDI.injector().getInstance(TestInterface1.class);
         Assert.assertNotNull(t1);
         Assert.assertEquals("TestClass1_3", t1.test1());
@@ -33,7 +33,7 @@ public class DITest {
         Assert.assertNotNull(t2);
         Assert.assertEquals("TestClass2_1 - TEST-A - 0", t2.test2("TEST-A", 0));
 
-        LightDI.injector().inject(TestInterface2.class, TestClass2_2.class);
+        LightDI.injector().bind(TestInterface2.class, TestClass2_2.class);
         t2 = LightDI.injector().getInstance(TestInterface2.class);
         Assert.assertNotNull(t2);
         Assert.assertEquals("TestClass2_2 - TEST-B - 1", t2.test2("TEST-B", 1));
@@ -45,10 +45,12 @@ public class DITest {
         Assert.assertEquals("TestClass1_3", t3.t1().test1());
         Assert.assertEquals("TestClass2_2 - TEST-C - 2", t3.t2().test2("TEST-C", 2));
 
-        LightDI.injector().inject(TestInterface1.class, TestClass1_1.class);
-        LightDI.injector().inject(TestInterface2.class, TestClass2_1.class);
-        
-        TestInterface4 t4 = LightDI.injector().getInstance(TestInterface4.class);
+        TestInterface4 t4 = LightDI.binder()
+                .bind(TestInterface1.class, TestClass1_1.class)
+                .bind(TestInterface2.class, TestClass2_1.class)
+                .finish()
+                .getInstance(TestInterface4.class);
+
         Assert.assertNotNull(t4);
         Assert.assertNotNull(t4.t3());
         Assert.assertNotNull(t4.t3().t1());

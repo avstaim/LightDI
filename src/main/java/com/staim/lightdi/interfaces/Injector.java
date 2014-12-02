@@ -1,7 +1,5 @@
 package com.staim.lightdi.interfaces;
 
-import java.util.Map;
-
 /**
  * Implementation Manager Interface
  * Created by alexeyshcherbinin on 28.11.14.
@@ -13,14 +11,8 @@ public interface Injector {
     <T> T createInstance(Class<T> interfaceClass);
     <T> T createInstance(Class<T> interfaceClass, Object... arguments);
 
-    void inject(Class<?> interfaceClass, String fullName) throws ClassNotFoundException, ClassCastException;
-    void inject(Class<?> interfaceClass, String packageName, String implementationName) throws ClassNotFoundException, ClassCastException;
-    <T, N extends T> void inject(Class<T> interfaceClass, Class<N> implementationClass);
+    <T, N extends T> void bind(Class<T> interfaceClass, Class<N> implementationClass);
+    void bind(Binder binder);
 
-    void inject(Map<Class<?>, Class<?>> implementationMap);
-    void injectNames(Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException;
-    void injectNames(Map<Class<?>, String> packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException;
-    void injectNames(String packageMap, Map<Class<?>, String> implementationMap) throws ClassNotFoundException, ClassCastException;
-
-    void cleanSingletons();
+    void clearSingletons();
 }
