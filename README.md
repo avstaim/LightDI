@@ -27,13 +27,13 @@ or ...
 - Inject implementation in runtime:
 
 ``` java
-LightDI.instance().inject(TestInterface1.class, TestClass1_3.class);
+LightDI.binder().bind(TestInterface1.class, TestClass1_3.class).finish();
 ```
 
 - Create instance of your class:
 
 ``` java
-TestInterface1 t1 = LightDI.instance().getInstance(TestInterface1.class);
+TestInterface1 t1 = LightDI.injector().getInstance(TestInterface1.class);
 ```
 
 That is quite simple, isn't it? =) 
@@ -68,7 +68,7 @@ public class TestClass3 implements TestInterface3 {
 - Use your injected type hierarchy:
 
 ``` java
-TestInterface3 t3 = LightDI.instance().getInstance(TestInterface3.class);
+TestInterface3 t3 = LightDI.injector().getInstance(TestInterface3.class);
 t3.t1().test1());
 t3.t2().test2("TEST-C", 2));
 ```
