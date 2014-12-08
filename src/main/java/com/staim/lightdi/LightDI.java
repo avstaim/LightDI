@@ -19,6 +19,11 @@ public final class LightDI {
 
     private LightDI() {}
 
+    /**
+     * Get Injector Instance
+     *
+     * @return Injector Instance
+     */
     public static Injector injector() {
         if (_injector != null) return _injector;
         try {
@@ -29,6 +34,11 @@ public final class LightDI {
         }
     }
 
+    /**
+     * Get Binder Instance
+     *
+     * @return Binder Instance
+     */
     public static Binder binder() {
         try {
             return (Binder)_binderClass.newInstance();
@@ -37,5 +47,9 @@ public final class LightDI {
         }
     }
 
+    /**
+     * Get LightDI Version
+     * @return version string
+     */
     public static String versionString() { return versionHeader + LightDI.class.getPackage().getSpecificationVersion(); }
 }

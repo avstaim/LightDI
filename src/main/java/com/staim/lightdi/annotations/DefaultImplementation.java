@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Default Implementation Annotation is used to provide default implementation of Interface supporting LightDI. (Required)
+ * Default Implementation Annotation is used to provide default implementation of Interface supporting LightDI.
  *
  * Created by a_shcherbinin on 28.11.14.
  */

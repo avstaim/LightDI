@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Inject Annotation is used to mark class field to be injected using LightDI
+ * Singleton Annotation is used to mark interface as Singleton
  *
  * Created by a_shcherbinin on 28.11.14.
  */

@@ -216,6 +216,7 @@ public class InjectorImpl implements Injector {
         _lock.writeLock().lock();
         _singletons.clear();
         _lock.writeLock().unlock();
+        System.gc();
     }
 
     private void runOnCreate(final Injectable injectable) {
