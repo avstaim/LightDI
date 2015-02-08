@@ -11,7 +11,6 @@ import com.staim.lightdi.interfaces.Injector;
  * Created by alexeyshcherbinin on 28.11.14.
  */
 public final class LightDI {
-    private static Injector _injector;
     private static Class<?> _injectorClass = InjectorImpl.class;
     private static Class<?> _binderClass = BinderImpl.class;
 
@@ -19,19 +18,25 @@ public final class LightDI {
 
     private LightDI() {}
 
+    private static class InjectorHolder {
+        static final Injector INSTANCE = getInstance();
+
+        private static Injector getInstance() {
+            try {
+                return  (Injector)_injectorClass.newInstance();
+            } catch (InstantiationException|IllegalAccessException e) {
+                throw new RuntimeException("Unable to create Implementation Manager Instance");
+            }
+        }
+    }
+
     /**
      * Get Injector Instance
      *
      * @return Injector Instance
      */
     public static Injector injector() {
-        if (_injector != null) return _injector;
-        try {
-            _injector = (Injector) _injectorClass.newInstance();
-            return _injector;
-        } catch (InstantiationException|IllegalAccessException e) {
-            throw new RuntimeException("Unable to create Implementation Manager Instance");
-        }
+        return InjectorHolder.INSTANCE;
     }
 
     /**
